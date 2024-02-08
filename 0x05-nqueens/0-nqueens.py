@@ -1,70 +1,65 @@
 #!/usr/bin/python3
-
-"""Method that calculates the non-attacking nqueens of
-n * n board - Check the README.md file for detailed info"""
-
 import sys
 
+def is_safe(board, row, col, N):
+    # Check this row on left side
+    for i in range(col):
+        if board[row][i] == 1:
+            return False
 
-def ChessBoard(n: int):
-    """Program that solves the N queens problem with
-    Backtracking algorithm
-    Args:
-        n (int): no of non-attacking queens to place on board.
-                (n)^2 determines the size of chess board
+    # Check upper diagonal on left side
+    for i, j in zip(range(row, -1, -1), range(col, -1, -1)):
+        if board[i][j] == 1:
+            return False
 
-    Return:
-        List[List[int]]: List of list of rows & columns of where
-        queens are placed.
-    """
-    result = list()
+    # Check lower diagonal on left side
+    for i, j in zip(range(row, N), range(col, -1, -1)):
+        if board[i][j] == 1:
+            return False
 
-    def checkBoard(row, col, col_in_row):
-        """Checks if queen can be placed without attacking other queens"""
-        for r in range(row):
-            if row - r == abs(col - col_in_row[r]):
-                return False
+    return True
+
+def solve_nqueens_util(board, col, N, solutions):
+    if col >= N:
+        queens_positions = []
+        for i in range(N):
+            for j in range(N):
+                if board[i][j] == 1:
+                    queens_positions.append([i, j])
+        solutions.append(queens_positions)
         return True
 
-    def saveBoard(row, cols, col_in_row):
-        """Saves the current state (position of the queens) of the board"""
-        if row == n:
-            con_result = []
-            for r in range(n):
-                temp_result = []
-                for c in range(n):
-                    if c == col_in_row[r]:
-                        temp_result.append(r)
-                        temp_result.append(col_in_row[r])
-                        con_result.append(temp_result)
-                if len(con_result) == n:
-                    result.append(con_result)
-                    temp_result, con_result = [], []
+    res = False
+    for i in range(N):
+        if is_safe(board, i, col, N):
+            board[i][col] = 1
 
-    def placeQueen(row, cols, col_in_row):
-        """Places N non-attacking queens on an N * N chessboard"""
-        saveBoard(row, cols, col_in_row)
-        for col in range(n):
-            if cols[col] == 0 and checkBoard(row, col, col_in_row):
-                cols[col] = 1
-                col_in_row[row] = col
-                placeQueen(row + 1, cols, col_in_row)
-                cols[col] = 0
-    placeQueen(0, [0]*n, [0]*n)
-    return result
+            res = solve_nqueens_util(board, col + 1, N, solutions) or res
 
+            board[i][col] = 0
 
-if __name__ == '__main__':
-    if len(sys.argv) != 2:
-        print("Usage: nqueens N")
-        sys.exit(1)
-    if sys.argv[1].isdigit() is False:
+    return res
+
+def solve_nqueens(N):
+    if not N.isdigit():
         print("N must be a number")
         sys.exit(1)
-    if int(sys.argv[1]) < 4:
+    N = int(N)
+    if N < 4:
         print("N must be at least 4")
         sys.exit(1)
 
-    nqueens = ChessBoard(int(sys.argv[1]))
-    for queens in nqueens:
-        print(queens)
+    board = [[0] * N for _ in range(N)]
+    solutions = []
+    solve_nqueens_util(board, 0, N, solutions)
+
+    for solution in solutions:
+        print(solution)
+
+if __name__ == "__main__":
+    if len(sys.argv) != 2:
+        print("Usage: nqueens N")
+        sys.exit(1)
+
+    solve_nqueens(sys.argv[1])
+
